@@ -13,6 +13,12 @@ the **original ESP32/WROOM** (``xtensa-esp32-none-elf``) and **ESP32-C3**
 default) or ``--chip esp32c3``. See :ref:`esp32c3` for the RISC-V toolchain and
 build commands; the Xtensa setup is described below.
 
+The same generator profile also supports the **STM32F405RG** (Cortex-M4F)
+and **STM32H743VI** (Cortex-M7) through ``examples/stm32``, using
+``thumbv7em-none-eabihf`` and a hard-float Arm GNAT compiler. See
+:ref:`stm32` for the runtime selection, startup, memory layouts, and debugger
+test procedure.
+
 The generator accepts free functions using fixed-width integers through 64
 bits, 32/64-bit floating-point values, booleans, characters, void returns, and
 scalar reference parameters. It rejects classes/records, enumerations,
@@ -33,9 +39,10 @@ exception and allocation support. This first embedded path uses a reviewed
 Ada2Proxy scanner/runtime or general embedded support for rich Ada APIs.
 
 Validation passed host execution of the generated wrappers on Apple Silicon
-and cross-linked complete ESP32/WROOM and ESP32-C3 firmware. Physical board
-execution has not yet been performed. ESP32-S2, ESP32-S3, other RISC-V ESP32
-variants, and Intel macOS hosts require separate work or validation.
+and cross-linked complete ESP32/WROOM, ESP32-C3, STM32F405RG, and STM32H743VI
+probe firmware. Physical board execution has not yet been performed. Other
+STM32 parts/cores, ESP32-S2, ESP32-S3, other RISC-V ESP32 variants, and Intel
+macOS hosts require separate work or validation.
 
 Tools
 -----

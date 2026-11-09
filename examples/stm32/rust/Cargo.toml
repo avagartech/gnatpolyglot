@@ -1,0 +1,21 @@
+[package]
+name = "polyglot-stm32-probe"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["rlib"]
+
+[features]
+firmware = []
+
+[dependencies]
+stm32_bindings = { path = "../generated" }
+
+[profile.release]
+opt-level = "s"
+codegen-units = 1
+panic = "abort"
+overflow-checks = true
+lto = false

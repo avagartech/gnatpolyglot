@@ -32,14 +32,15 @@ You can then run the native application using:
 $[gnatpolyglot]> ./gnatpolyglot/bin/gnatpolyglot
 ```
 
-### ESP32 / Xtensa and RISC-V
+### Embedded ESP32 and STM32
 
 The Rust backend also provides an experimental `--embedded` profile for
 runtime-free `no_std` scalar bindings. The shared example builds and links Ada
-and generated Rust code for the original ESP32/WROOM (Xtensa) and ESP32-C3
-(RISC-V). See the [embedded guide](doc/embedded.rst),
-[ESP32-C3 setup](doc/esp32c3.rst), and [ESP32 example](examples/esp32/README.md).
-Both firmware images have been cross-linked; hardware execution is pending.
+and generated Rust code for the original ESP32/WROOM (Xtensa), ESP32-C3
+(RISC-V), and STM32F405RG/H743VI (Arm Cortex-M4F/M7). See the
+[embedded guide](doc/embedded.rst), [ESP32-C3 setup](doc/esp32c3.rst),
+[ESP32 example](examples/esp32/README.md), and [STM32 guide](doc/stm32.rst).
+The firmware images have been cross-linked; hardware execution is pending.
 
 ## License
 This work is licensed under `GPL-3.0-or-later AND Apache-2.0`.

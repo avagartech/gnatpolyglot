@@ -50,7 +50,7 @@ It must be provided with at least a proxy file and an output path:
    Generate a runtime-free ``no_std`` crate for free C-ABI functions using
    fixed-width scalars and scalar reference parameters. Unsupported interface
    types are rejected before generation. This option cannot be combined with
-   ``--with-runtime``. See :ref:`embedded` for the ESP32/WROOM and ESP32-C3
+   ``--with-runtime``. See :ref:`embedded` for the ESP32 and STM32 Cortex-M
    build paths.
 
 Modules
@@ -355,3 +355,7 @@ ESP32/WROOM's ``xtensa-esp32-none-elf`` target and ESP32-C3's
 ``riscv32imc-unknown-none-elf`` target. Both firmware images have been
 cross-linked; board execution remains a separate hardware test. See
 :ref:`embedded` and :ref:`esp32c3`.
+
+The same embedded profile also cross-links STM32F405RG (Cortex-M4F) and
+STM32H743VI (Cortex-M7) probe firmware using ``thumbv7em-none-eabihf``.
+See :ref:`stm32` for Arm ABI checks and pending hardware validation.

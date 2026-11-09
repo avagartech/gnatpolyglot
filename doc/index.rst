@@ -17,6 +17,7 @@ Welcome to GNATpolyglot's documentation!
    proxy2rust
    embedded
    esp32c3
+   stm32
    call_convention
    limitations
 
