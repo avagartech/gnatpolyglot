@@ -11,6 +11,7 @@ import com.adacore.gnatpolyglot.proxy.ProxyException;
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import gg.jte.output.FileOutput;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,7 +33,21 @@ public class RustPrinter extends Printer {
 
     @Override
     public void generate(Path outputPath, Path runtimeLocation) throws IOException {
+        outputPath = outputPath.toAbsolutePath().normalize();
+        Files.createDirectories(outputPath);
         RustAPI api = new RustAPI(context, proxy.name);
+
+        Path runtime = runtimeLocation.toAbsolutePath().normalize().resolve("ada/src2rust");
+        String dependencyPath;
+        try {
+            dependencyPath = outputPath.relativize(runtime).toString();
+        } catch (IllegalArgumentException e) {
+            // Windows installations may put the runtime on another drive.
+            dependencyPath = runtime.toString();
+        }
+        String runtimeDependency =
+                com.adacore.gnatpolyglot.proxy.Proxy.getObjectMapper()
+                        .writeValueAsString(dependencyPath.replace(File.separatorChar, '/'));
 
         // Generate Cargo.toml. Hand the template the installed runtime location (relative to the
         // generated crate); the template knows where the runtime crate it depends on sits within
@@ -41,13 +56,7 @@ public class RustPrinter extends Printer {
         try (FileOutput out = new FileOutput(cargoToml)) {
             templateEngine.render(
                     "cargo_toml.jte",
-                    Map.of(
-                            "api",
-                            api,
-                            "proxy",
-                            proxy,
-                            "runtimeLocation",
-                            outputPath.relativize(runtimeLocation).toString()),
+                    Map.of("api", api, "proxy", proxy, "runtimeLocation", runtimeDependency),
                     out);
         }
 
