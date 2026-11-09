@@ -32,6 +32,13 @@ You can then run the native application using:
 $[gnatpolyglot]> ./gnatpolyglot/bin/gnatpolyglot
 ```
 
+### ESP32 / Xtensa
+
+The Rust backend also provides an experimental `--embedded` profile for
+runtime-free `no_std` scalar bindings. The original ESP32/WROOM example builds
+and links Ada and generated Rust code into firmware. See the
+[embedded guide](doc/embedded.rst) and [ESP32 example](examples/esp32/README.md).
+
 ## License
 This work is licensed under `GPL-3.0-or-later AND Apache-2.0`.
 

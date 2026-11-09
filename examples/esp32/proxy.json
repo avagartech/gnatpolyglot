@@ -1,0 +1,242 @@
+{
+  "name": "esp32_bindings",
+  "input_language": "ada",
+  "modules": [
+    {
+      "name": {
+        "names": [
+          "abi_probe"
+        ]
+      },
+      "declarations": [
+        {
+          "kind": "function",
+          "name": {
+            "names": [
+              "abi_probe",
+              "checked_add"
+            ]
+          },
+          "doc": "Explicit C export from the allocation-free Ada probe.",
+          "symbol": "polyglot_checked_add",
+          "type": {
+            "kind": "function",
+            "parameters": [
+              {
+                "name": "left",
+                "type": {
+                  "kind": "typename",
+                  "name": {
+                    "names": [
+                      "sint32"
+                    ]
+                  }
+                },
+                "transfer": {
+                  "required_owner": "any"
+                }
+              },
+              {
+                "name": "right",
+                "type": {
+                  "kind": "typename",
+                  "name": {
+                    "names": [
+                      "sint32"
+                    ]
+                  }
+                },
+                "transfer": {
+                  "required_owner": "any"
+                }
+              },
+              {
+                "name": "total",
+                "type": {
+                  "kind": "reference",
+                  "type_expr": {
+                    "kind": "typename",
+                    "name": {
+                      "names": [
+                        "sint32"
+                      ]
+                    }
+                  },
+                  "is_const": false
+                },
+                "transfer": {
+                  "required_owner": "any"
+                }
+              }
+            ],
+            "return_type": {
+              "kind": "typename",
+              "name": {
+                "names": [
+                  "sint32"
+                ]
+              }
+            },
+            "return_owner": "unknown"
+          }
+        },
+        {
+          "kind": "function",
+          "name": {
+            "names": [
+              "abi_probe",
+              "fold_64"
+            ]
+          },
+          "doc": "Explicit C export from the allocation-free Ada probe.",
+          "symbol": "polyglot_fold_64",
+          "type": {
+            "kind": "function",
+            "parameters": [
+              {
+                "name": "value",
+                "type": {
+                  "kind": "typename",
+                  "name": {
+                    "names": [
+                      "uint64"
+                    ]
+                  }
+                },
+                "transfer": {
+                  "required_owner": "any"
+                }
+              }
+            ],
+            "return_type": {
+              "kind": "typename",
+              "name": {
+                "names": [
+                  "uint64"
+                ]
+              }
+            },
+            "return_owner": "unknown"
+          }
+        },
+        {
+          "kind": "function",
+          "name": {
+            "names": [
+              "abi_probe",
+              "scale_32"
+            ]
+          },
+          "doc": "Explicit C export from the allocation-free Ada probe.",
+          "symbol": "polyglot_scale_32",
+          "type": {
+            "kind": "function",
+            "parameters": [
+              {
+                "name": "value",
+                "type": {
+                  "kind": "typename",
+                  "name": {
+                    "names": [
+                      "float32"
+                    ]
+                  }
+                },
+                "transfer": {
+                  "required_owner": "any"
+                }
+              }
+            ],
+            "return_type": {
+              "kind": "typename",
+              "name": {
+                "names": [
+                  "float32"
+                ]
+              }
+            },
+            "return_owner": "unknown"
+          }
+        },
+        {
+          "kind": "function",
+          "name": {
+            "names": [
+              "abi_probe",
+              "scale_64"
+            ]
+          },
+          "doc": "Explicit C export from the allocation-free Ada probe.",
+          "symbol": "polyglot_scale_64",
+          "type": {
+            "kind": "function",
+            "parameters": [
+              {
+                "name": "value",
+                "type": {
+                  "kind": "typename",
+                  "name": {
+                    "names": [
+                      "float64"
+                    ]
+                  }
+                },
+                "transfer": {
+                  "required_owner": "any"
+                }
+              }
+            ],
+            "return_type": {
+              "kind": "typename",
+              "name": {
+                "names": [
+                  "float64"
+                ]
+              }
+            },
+            "return_owner": "unknown"
+          }
+        },
+        {
+          "kind": "function",
+          "name": {
+            "names": [
+              "abi_probe",
+              "negate_16"
+            ]
+          },
+          "doc": "Explicit C export from the allocation-free Ada probe.",
+          "symbol": "polyglot_negate_16",
+          "type": {
+            "kind": "function",
+            "parameters": [
+              {
+                "name": "value",
+                "type": {
+                  "kind": "typename",
+                  "name": {
+                    "names": [
+                      "sint16"
+                    ]
+                  }
+                },
+                "transfer": {
+                  "required_owner": "any"
+                }
+              }
+            ],
+            "return_type": {
+              "kind": "typename",
+              "name": {
+                "names": [
+                  "sint16"
+                ]
+              }
+            },
+            "return_owner": "unknown"
+          }
+        }
+      ]
+    }
+  ]
+}
