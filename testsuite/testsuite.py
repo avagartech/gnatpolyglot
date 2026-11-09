@@ -80,6 +80,11 @@ class GNATpolyglotTestsuite(Testsuite):
 
         self.env.unsupported_languages = []
 
+        if self.env.build.platform not in (
+            "x86_64-linux", "x86_64-windows64", "aarch64-darwin"
+        ):
+            self.env.unsupported_languages.append("rust")
+
         if self.env.build.platform in (
             "x86_64-linux", "x86_64-windows64"
         ):
@@ -104,7 +109,7 @@ class GNATpolyglotTestsuite(Testsuite):
                         }
                     )
         else:
-            self.env.unsupported_languages.extend(["rust", "java"])
+            self.env.unsupported_languages.append("java")
 
         # Check if the internal testsuite is present
         self.env.control_condition_env = {

@@ -15,6 +15,7 @@ Welcome to GNATpolyglot's documentation!
    proxy2cpp
    proxy2java
    proxy2rust
+   macos
    call_convention
    limitations
 

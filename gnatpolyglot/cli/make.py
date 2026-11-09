@@ -2,6 +2,7 @@ import argparse
 import os
 import os.path as P
 import subprocess
+import sys
 
 BIN_DIR = P.join(P.dirname(__file__), "..", "bin")
 
@@ -15,8 +16,10 @@ def look_for_files_in_env(files: list[str], env_var_name: str) -> dict[str, None
     """
     res : dict[str, None | str] = {f: None for f in files}
     for dir in os.environ.get(env_var_name, "").split(os.pathsep):
+        if not dir:
+            continue
         for file in files:
-            if os.path.isfile(os.path.join(dir, file)):
+            if res[file] is None and os.path.isfile(os.path.join(dir, file)):
                 res[file] = dir
     one_not_found = False
     for file, dir in res.items():
@@ -24,6 +27,45 @@ def look_for_files_in_env(files: list[str], env_var_name: str) -> dict[str, None
             one_not_found = True
             print(f"Cannot find \"{file}\" in {env_var_name}")
     return None if one_not_found else res
+
+
+def native_image_options() -> list[str]:
+    """Locate native dependencies and use the host linker's search options."""
+    if os.name == "nt":
+        return []
+
+    is_macos = sys.platform == "darwin"
+    headers_paths = look_for_files_in_env(["libadalang.h"], "C_INCLUDE_PATH")
+    # macOS supplies zlib through the SDK; there is no libz.so to locate.
+    libraries = ["libadalang.dylib"] if is_macos else ["libadalang.so", "libz.so"]
+    libs_paths = look_for_files_in_env(libraries, "LIBRARY_PATH")
+    if headers_paths is None or libs_paths is None:
+        raise RuntimeError("Missing lib dependencies, cannot continue")
+
+    options = [
+        *[f"--native-compiler-options=-I{d}" for d in headers_paths.values()],
+        *[f"--native-compiler-options=-L{d}" for d in libs_paths.values()],
+    ]
+    if is_macos:
+        # Apple's linker has no -rpath-link. Add runtime search paths for
+        # dependencies whose install names use @rpath instead.
+        paths = [
+            *libs_paths.values(),
+            *os.environ.get("LIBRARY_PATH", "").split(os.pathsep),
+            *os.environ.get("DYLD_LIBRARY_PATH", "").split(os.pathsep),
+        ]
+        options.extend(
+            f"--native-compiler-options=-Wl,-rpath,{p}"
+            for p in dict.fromkeys(paths) if p
+        )
+    else:
+        paths = os.environ.get("LD_LIBRARY_PATH", "").split(os.pathsep)
+        options.extend(
+            f"--native-compiler-options=-Wl,-rpath-link={p}"
+            for p in paths if p
+        )
+    return options
+
 
 if __name__ == "__main__":
 
@@ -56,38 +98,7 @@ if __name__ == "__main__":
     # Create the dir hierarchy
     os.makedirs(BIN_DIR, exist_ok=True)
 
-    # Prepare system dependant native-image options
-    os_specific_options = []
-    if not os.name == "nt":
-        # On Linux, we need to provide the compiler additional arguments for
-        # it to find headers and shared objects.
-        headers_paths = look_for_files_in_env(
-            ["libadalang.h"],
-            "C_INCLUDE_PATH",
-        )
-        libs_paths = look_for_files_in_env(
-            ["libadalang.so", "libz.so"],
-            "LIBRARY_PATH",
-        )
-        if headers_paths is None or libs_paths is None:
-            print("Missing lib dependencies, cannot continue")
-            exit(1)
-
-        # We also need to provide rpath-links to the compiler to allow it to
-        # find libraries during linking phase.
-        ld_library_path = os.environ.get('LD_LIBRARY_PATH')
-        rpaths = (
-            [f"-Wl,-rpath-link={p}" for p in ld_library_path.split(os.pathsep)]
-            if ld_library_path else
-            []
-        )
-
-        os_specific_options.extend([
-            # Then we add additional options for the C compiler
-            *[f"--native-compiler-options=-I{dir}" for dir in headers_paths.values()],
-            *[f"--native-compiler-options=-L{dir}" for dir in libs_paths.values()],
-            *[f"--native-compiler-options={rp}" for rp in rpaths],
-        ])
+    os_specific_options = native_image_options()
 
     # Create the base Native-Image command
     cmd = [

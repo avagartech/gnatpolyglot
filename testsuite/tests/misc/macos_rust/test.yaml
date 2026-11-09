@@ -1,0 +1,4 @@
+driver: python
+
+control:
+  - [SKIP, "env.build.platform != 'aarch64-darwin'", "Exercises Apple Silicon standard standalone libraries; Intel macOS is deferred"]

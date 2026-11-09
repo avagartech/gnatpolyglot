@@ -78,6 +78,23 @@ def run_proxy_validator(proxy_location: str, expect_returncode: int = 0) -> None
     )
 
 
+def macos_ada_runtime_flags() -> list[str]:
+    """Link the target GNAT runtime when encapsulation is unavailable."""
+    compiler = os.environ["POLYGLOT_ADA_COMPILER"]
+    result = []
+    for name, required in (
+        ("adalib/libgnarl.a", True),
+        ("adalib/libgnat.a", True),
+        ("libemutls_w.a", False),
+    ):
+        path = run([compiler, f"-print-file-name={name}"], pipe=True).strip()
+        if os.path.isfile(path):
+            result.append(path)
+        elif required:
+            raise RuntimeError(f"Cannot find {name} using POLYGLOT_ADA_COMPILER")
+    return result
+
+
 class ScannerConfig:
 
     def __init__(self, path) -> None:
@@ -216,8 +233,10 @@ def compile_main(
             f"-l{input_lib}_proxy_agg",
             *(ldflags if ldflags else [])
         ]
-        if os.name != "nt":
+        if sys.platform == "linux":
             LD_FLAGS.extend(["-ldl", "-lpthread"])
+        elif sys.platform == "darwin":
+            LD_FLAGS.extend(macos_ada_runtime_flags())
 
         argv = [
             "g++",
@@ -254,7 +273,11 @@ def compile_main(
         ]
         run(argv)
         exec_env = {}
-        lib_path_var = "LD_LIBRARY_PATH" if os.name != "nt" else "PATH"
+        lib_path_var = (
+            "PATH" if os.name == "nt" else
+            "DYLD_LIBRARY_PATH" if sys.platform == "darwin" else
+            "LD_LIBRARY_PATH"
+        )
         for dep in deps:
             if dep.lang != "java":
                 add_path(exec_env, lib_path_var, dep.library_path)
@@ -288,6 +311,10 @@ def compile_lib(
     if input_lang == "ada":
         if os.path.isdir(lib_location):
             lib_location = str(list(Path(lib_location).glob("*.gpr"))[0])
+        project_args = (
+            (["-XLIBRARY_STANDALONE=standard"] if sys.platform == "darwin" else [])
+            + extra_args
+        )
         run([
             "gprbuild",
             lib_location,
@@ -295,14 +322,14 @@ def compile_lib(
             "-ggdb",
             "-gnatwI",
             "--gpr=2",
-            *extra_args,
+            *project_args,
         ])
         inspect = json.loads(run(
             [
                 "gprinspect",
                 lib_location,
                 "--display=json-compact",
-                *[arg for arg in extra_args if not arg.startswith("-gnat")],
+                *[arg for arg in project_args if not arg.startswith("-gnat")],
             ],
             pipe=True
         ))
@@ -420,6 +447,8 @@ class PrinterConfig():
         if ld_flags:
             if os.name == "nt":
                 return ld_flags.get("windows")
+            elif sys.platform == "darwin":
+                return ld_flags.get("darwin")
             else:
                 return ld_flags.get("linux")
 

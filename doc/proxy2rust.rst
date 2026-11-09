@@ -326,8 +326,16 @@ encapsulated proxy library, and emits the right link directives:
 * ``POLYGLOT_PROXY_LIB_NAME`` — name of the archive (without ``lib`` prefix or
   extension).
 
-It also links the platform's required system libraries (``dl`` and ``pthread``
-on Linux; ``advapi32`` on Windows, which the GNAT runtime needs).
+It selects system libraries using Cargo's target platform (``dl`` and
+``pthread`` on Linux; ``advapi32`` on Windows). macOS uses the ``libSystem``
+already linked by Rust. Cargo reruns the build script when either proxy
+library environment variable changes or the selected archive changes.
+
+On macOS, ``POLYGLOT_ADA_COMPILER`` can name the target GNAT ``gcc`` executable.
+The build script queries it for the static Ada runtime archives, bundles them
+into the generated Rust library, and tracks those archives for rebuilds. This
+is needed with standard standalone proxy libraries on toolchains that do not
+support encapsulated libraries. See :ref:`macos` for the complete procedure.
 
 .. code:: sh
 
@@ -338,5 +346,8 @@ on Linux; ``advapi32`` on Windows, which the GNAT runtime needs).
 Supported platforms
 --------------------
 
-Proxy2Rust currently supports only 64-bit Linux and Windows platforms (see
-:ref:`Limitations <limitations>`).
+Proxy2Rust supports 64-bit Linux and Windows and has an experimental macOS
+port initially targeting ``aarch64-apple-darwin`` (Apple Silicon). The native
+integration smoke test has been exercised on Apple Silicon. Intel macOS
+support is deferred to a later phase. See
+:ref:`macos` and :ref:`Limitations <limitations>`.
