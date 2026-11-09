@@ -59,6 +59,9 @@ For a C3 connected through native USB Serial/JTAG, add ``--usb-console`` to
 the firmware build. This enables the SDK's hardware USB console and selects
 the separate ``esp32c3-usb`` environment. The default C3 environment uses a
 UART console for boards with an external USB-to-UART bridge.
+Use ``--usb-console`` in ``test_board.py`` for that USB firmware too; it
+deasserts DTR/RTS before opening the port and stores the result with the USB
+build outputs.
 
 After flashing the matching probe, use
 `python3 examples/esp32/test_board.py --chip esp32c3 --port <PORT>` (or

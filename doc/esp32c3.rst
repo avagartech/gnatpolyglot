@@ -151,6 +151,14 @@ Use ``-e esp32c3-usb`` for the native USB build. Its serial port is the
 Espressif USB Serial/JTAG device (typically ``/dev/cu.usbmodem...`` on macOS).
 When using PlatformIO's monitor, the USB environment leaves DTR and RTS
 deasserted; the bootloader and application console share that USB connection.
+Use the same line settings in the collector with:
+
+.. code:: sh
+
+   python3 examples/esp32/test_board.py --chip esp32c3 --usb-console --port <PORT>
+
+This saves the native USB result under
+``build/esp32c3-usb/hardware-validation.json``.
 
 For a custom ``--build-dir``, set ``POLYGLOT_PROBE_BUILD_DIR`` to that full
 directory when invoking PlatformIO directly so it finds the matching

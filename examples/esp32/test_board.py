@@ -12,13 +12,18 @@ from targets import TARGETS
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--chip", choices=TARGETS, default="esp32")
+    parser.add_argument("--usb-console", action="store_true",
+                        help="use the C3 native USB console without asserting DTR/RTS")
     parser.add_argument("--port", required=True)
     parser.add_argument("--timeout", type=float, default=15)
     parser.add_argument("--output", type=Path,
                         default=None)
     args = parser.parse_args()
     target = TARGETS[args.chip]
-    args.output = args.output or Path(__file__).resolve().parent / "build" / target.chip / "hardware-validation.json"
+    if args.usb_console and target.chip != "esp32c3":
+        parser.error("--usb-console requires --chip esp32c3")
+    output_name = target.chip + ("-usb" if args.usb_console else "")
+    args.output = args.output or Path(__file__).resolve().parent / "build" / output_name / "hardware-validation.json"
     if args.timeout <= 0:
         parser.error("--timeout must be positive")
     try:
@@ -27,8 +32,17 @@ def main():
         parser.error("install pyserial in the Python environment used for this command")
     report = {"target": target.label, "chip": target.chip, "hardware_tested": False, "passed": False,
               "port": args.port, "timestamp_utc": datetime.now(timezone.utc).isoformat(), "lines": []}
+    report["console"] = "usb" if args.usb_console else "uart"
     try:
-        with serial.Serial(args.port, 115200, timeout=0.25, write_timeout=2) as board:
+        board = serial.Serial(None if args.usb_console else args.port, 115200,
+                              timeout=0.25, write_timeout=2)
+        if args.usb_console:
+            # Set line states before opening: the native USB peripheral also
+            # uses these signals for download/reset control.
+            board.dtr = False
+            board.rts = False
+            board.port = args.port
+        with board:
             report["hardware_tested"] = True
             deadline = time.monotonic() + args.timeout
             next_request = 0
