@@ -15,9 +15,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 public class RustPrinter extends Printer {
+
+    private final boolean embedded;
 
     /** The template rendering engine. */
     private final TemplateEngine templateEngine =
@@ -28,7 +31,13 @@ public class RustPrinter extends Printer {
                     "gg.jte.generate.precompiled.proxy2rust");
 
     public RustPrinter(Path path) throws IOException, ProxyException {
+        this(path, false);
+    }
+
+    public RustPrinter(Path path, boolean embedded) throws IOException, ProxyException {
         super(path);
+        this.embedded = embedded;
+        if (embedded) EmbeddedProfile.validate(proxy, context);
     }
 
     @Override
@@ -37,17 +46,20 @@ public class RustPrinter extends Printer {
         Files.createDirectories(outputPath);
         RustAPI api = new RustAPI(context, proxy.name);
 
-        Path runtime = runtimeLocation.toAbsolutePath().normalize().resolve("ada/src2rust");
-        String dependencyPath;
-        try {
-            dependencyPath = outputPath.relativize(runtime).toString();
-        } catch (IllegalArgumentException e) {
-            // Windows installations may put the runtime on another drive.
-            dependencyPath = runtime.toString();
+        String runtimeDependency = "";
+        if (!embedded) {
+            Path runtime = runtimeLocation.toAbsolutePath().normalize().resolve("ada/src2rust");
+            String dependencyPath;
+            try {
+                dependencyPath = outputPath.relativize(runtime).toString();
+            } catch (IllegalArgumentException e) {
+                // Windows installations may put the runtime on another drive.
+                dependencyPath = runtime.toString();
+            }
+            runtimeDependency =
+                    com.adacore.gnatpolyglot.proxy.Proxy.getObjectMapper()
+                            .writeValueAsString(dependencyPath.replace(File.separatorChar, '/'));
         }
-        String runtimeDependency =
-                com.adacore.gnatpolyglot.proxy.Proxy.getObjectMapper()
-                        .writeValueAsString(dependencyPath.replace(File.separatorChar, '/'));
 
         // Generate Cargo.toml. Hand the template the installed runtime location (relative to the
         // generated crate); the template knows where the runtime crate it depends on sits within
@@ -56,19 +68,28 @@ public class RustPrinter extends Printer {
         try (FileOutput out = new FileOutput(cargoToml)) {
             templateEngine.render(
                     "cargo_toml.jte",
-                    Map.of("api", api, "proxy", proxy, "runtimeLocation", runtimeDependency),
+                    Map.of(
+                            "api",
+                            api,
+                            "proxy",
+                            proxy,
+                            "runtimeLocation",
+                            runtimeDependency,
+                            "embedded",
+                            embedded),
                     out);
         }
 
         // Generate build.rs
         Path buildRs = outputPath.resolve("build.rs");
         try (FileOutput out = new FileOutput(buildRs)) {
-            templateEngine.render("build_rs.jte", Map.of("api", api, "proxy", proxy), out);
+            templateEngine.render(
+                    "build_rs.jte", Map.of("api", api, "proxy", proxy, "embedded", embedded), out);
         }
 
         // Record element types that need a generated PolyglotArrayElement impl (empty for
         // native-only or array-free proxies).
-        var recordArrayElements = api.recordArrayElements(proxy.modules);
+        var recordArrayElements = api.recordArrayElements(embedded ? List.of() : proxy.modules);
 
         // Generate src/lib.rs
         Path srcDir = outputPath.resolve("src");
@@ -83,7 +104,9 @@ public class RustPrinter extends Printer {
                             "proxy",
                             proxy,
                             "hasRecordArrays",
-                            !recordArrayElements.isEmpty()),
+                            !recordArrayElements.isEmpty(),
+                            "embedded",
+                            embedded),
                     out);
         }
 

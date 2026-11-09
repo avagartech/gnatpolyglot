@@ -16,6 +16,7 @@ Welcome to GNATpolyglot's documentation!
    proxy2java
    proxy2rust
    macos
+   embedded
    call_convention
    limitations
 

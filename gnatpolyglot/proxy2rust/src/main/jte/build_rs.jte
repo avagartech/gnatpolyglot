@@ -9,6 +9,7 @@ Links against the proxy library via POLYGLOT_PROXY_LIB_DIR / POLYGLOT_PROXY_LIB_
 
 @param RustAPI api
 @param Proxy proxy
+@param boolean embedded
 
 fn main() {
     println!("cargo:rerun-if-env-changed=POLYGLOT_PROXY_LIB_DIR");
@@ -24,6 +25,7 @@ fn main() {
             println!("cargo:rerun-if-changed={}", archive.display());
         }
     }
+@if (!embedded)
     // Build scripts run on the host, so cfg!(target_os) would select the
     // host's libraries even when Cargo is building for a different target.
     match std::env::var("CARGO_CFG_TARGET_OS").as_deref() {
@@ -65,4 +67,5 @@ fn main() {
         }
         _ => {}
     }
+@endif
 }

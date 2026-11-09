@@ -3,6 +3,7 @@
 import contextlib
 import importlib.util
 import io
+import json
 import os
 from pathlib import Path
 import runpy
@@ -110,39 +111,50 @@ with tempfile.TemporaryDirectory() as tmp:
             pass
         assert "-Djava.library.path=/native/libs" in run.call_args.args[0]
 
-    # Exercise the Rust build script as an executable, including selecting a
+    # Exercise generated Rust build scripts as executables, including selecting a
     # target OS different from the host. No target standard libraries or
     # native Ada dependencies are needed for this check.
     if shutil.which("rustc"):
-        template = Path(POLYGLOT_HOME) / "proxy2rust/src/main/jte/build_rs.jte"
-        source = root / "build.rs"
-        body = template.read_text().split("fn main()", 1)[1]
-        source.write_text("fn main()" + body)
-        binary = root / ("build.exe" if os.name == "nt" else "build")
-        subprocess.run(["rustc", str(source), "-o", str(binary)], check=True)
-        for target, expected in (
-            ("linux", {"dl", "pthread"}),
-            ("windows", {"advapi32"}),
-            ("macos", set()),
-        ):
-            output = subprocess.check_output(
-                [str(binary)],
-                env={
-                    **{k: v for k, v in os.environ.items() if k != "POLYGLOT_ADA_COMPILER"},
-                    "CARGO_CFG_TARGET_OS": target,
-                    "POLYGLOT_PROXY_LIB_DIR": str(libs),
-                    "POLYGLOT_PROXY_LIB_NAME": "test_proxy_agg",
-                },
-                text=True,
-            ).splitlines()
-            assert f"cargo:rustc-link-search=native={libs}" in output
-            assert f"cargo:rerun-if-changed={libs / 'libtest_proxy_agg.a'}" in output
-            assert f"cargo:rerun-if-changed={libs}" not in output
-            assert "cargo:rustc-link-lib=static=test_proxy_agg" in output
-            for var in ("POLYGLOT_PROXY_LIB_DIR", "POLYGLOT_PROXY_LIB_NAME"):
-                assert f"cargo:rerun-if-env-changed={var}" in output
-            actual = {line.removeprefix("cargo:rustc-link-lib=") for line in output
-                      if line.startswith("cargo:rustc-link-lib=") and "static=" not in line}
-            assert actual == expected, (target, actual)
+        proxy = root / "proxy.json"
+        proxy.write_text(json.dumps({
+            "name": "platform_bindings", "input_language": "ada", "modules": [],
+        }))
+        java_home = os.environ.get("JAVA_HOME") or os.environ["GRAAL_HOME"]
+        generator = [
+            str(Path(java_home) / "bin/java"), "-cp",
+            str(Path(POLYGLOT_HOME) / "proxy2rust/target/proxy2rust.jar"),
+            "com.adacore.gnatpolyglot.proxy2rust.Proxy2Rust", str(proxy),
+        ]
+        for embedded in (False, True):
+            generated = root / ("embedded" if embedded else "desktop")
+            options = (["--embedded"] if embedded else
+                       ["--with-runtime", str(Path(POLYGLOT_HOME) / "runtimes")])
+            subprocess.run([*generator, "-o", str(generated), *options],
+                           check=True, capture_output=True, text=True)
+            binary = generated / ("build.exe" if os.name == "nt" else "build")
+            subprocess.run(["rustc", str(generated / "build.rs"), "-o", str(binary)], check=True)
+            for target, system_libraries in (
+                ("linux", {"dl", "pthread"}),
+                ("windows", {"advapi32"}),
+                ("macos", set()),
+            ):
+                env = {k: v for k, v in os.environ.items() if k != "POLYGLOT_ADA_COMPILER"}
+                env.update(CARGO_CFG_TARGET_OS=target, POLYGLOT_PROXY_LIB_DIR=str(libs),
+                           POLYGLOT_PROXY_LIB_NAME="test_proxy_agg")
+                if embedded:
+                    # Embedded generation must not query a host GNAT compiler,
+                    # even when Cargo runs its build script on a Mac.
+                    env["POLYGLOT_ADA_COMPILER"] = str(root / "missing-compiler")
+                output = subprocess.check_output([str(binary)], env=env, text=True).splitlines()
+                assert f"cargo:rustc-link-search=native={libs}" in output
+                assert f"cargo:rerun-if-changed={libs / 'libtest_proxy_agg.a'}" in output
+                assert f"cargo:rerun-if-changed={libs}" not in output
+                assert "cargo:rustc-link-lib=static=test_proxy_agg" in output
+                for var in ("POLYGLOT_PROXY_LIB_DIR", "POLYGLOT_PROXY_LIB_NAME"):
+                    assert f"cargo:rerun-if-env-changed={var}" in output
+                actual = {line.removeprefix("cargo:rustc-link-lib=") for line in output
+                          if line.startswith("cargo:rustc-link-lib=") and "static=" not in line}
+                expected = set() if embedded else system_libraries
+                assert actual == expected, (embedded, target, actual)
 
 print("Platform support checks passed")
