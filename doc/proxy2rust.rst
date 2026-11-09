@@ -50,7 +50,8 @@ It must be provided with at least a proxy file and an output path:
    Generate a runtime-free ``no_std`` crate for free C-ABI functions using
    fixed-width scalars and scalar reference parameters. Unsupported interface
    types are rejected before generation. This option cannot be combined with
-   ``--with-runtime``. See :ref:`embedded` for the ESP32/WROOM build path.
+   ``--with-runtime``. See :ref:`embedded` for the ESP32/WROOM and ESP32-C3
+   build paths.
 
 Modules
 -------
@@ -350,6 +351,7 @@ Proxy2Rust's desktop profile currently supports 64-bit Linux and Windows platfor
 :ref:`Limitations <limitations>`).
 
 An experimental scalar-only ``no_std`` path also targets the original
-ESP32/WROOM's ``xtensa-esp32-none-elf`` target. Its firmware has been
+ESP32/WROOM's ``xtensa-esp32-none-elf`` target and ESP32-C3's
+``riscv32imc-unknown-none-elf`` target. Both firmware images have been
 cross-linked; board execution remains a separate hardware test. See
-:ref:`embedded`.
+:ref:`embedded` and :ref:`esp32c3`.

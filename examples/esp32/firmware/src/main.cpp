@@ -6,6 +6,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+#define POLYGLOT_CHIP "esp32c3"
+#elif defined(CONFIG_IDF_TARGET_ESP32)
+#define POLYGLOT_CHIP "esp32"
+#else
+#error Unsupported ESP32 binding-probe target
+#endif
+
 extern "C" uint32_t polyglot_esp32_self_test();
 
 extern "C" void __gnat_last_chance_handler(const char*, int) {
@@ -22,15 +30,15 @@ extern "C" void polyglot_esp32_abort() {
 
 static void test() {
     uint32_t failures = polyglot_esp32_self_test();
-    Serial.printf("GNATPOLYGLOT %s mask=0x%08lx\n",
-                  failures == 0 ? "PASS" : "FAIL", (unsigned long)failures);
+    Serial.printf("GNATPOLYGLOT %s chip=%s mask=0x%08lx\n",
+                  failures == 0 ? "PASS" : "FAIL", POLYGLOT_CHIP, (unsigned long)failures);
     Serial.flush();
 }
 
 void setup() {
     Serial.begin(115200);
     delay(250);
-    Serial.println("GNATPOLYGLOT ESP32-WROOM READY");
+    Serial.printf("GNATPOLYGLOT READY chip=%s\n", POLYGLOT_CHIP);
     test();
 }
 

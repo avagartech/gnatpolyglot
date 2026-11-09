@@ -16,6 +16,7 @@ Welcome to GNATpolyglot's documentation!
    proxy2java
    proxy2rust
    embedded
+   esp32c3
    call_convention
    limitations
 
