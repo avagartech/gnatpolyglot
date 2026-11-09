@@ -39,7 +39,9 @@ runtime-free `no_std` scalar bindings. The shared example builds and links Ada
 and generated Rust code for the original ESP32/WROOM (Xtensa) and ESP32-C3
 (RISC-V). See the [embedded guide](doc/embedded.rst),
 [ESP32-C3 setup](doc/esp32c3.rst), and [ESP32 example](examples/esp32/README.md).
-Both firmware images have been cross-linked; hardware execution is pending.
+Both firmware images have been cross-linked. The original ESP32 probe passed
+three clean startups and 300 repeated hardware self-tests; ESP32-C3 hardware
+execution is pending. See the [hardware record](examples/esp32/validation/esp32-d0wd-v3.json).
 
 ## License
 This work is licensed under `GPL-3.0-or-later AND Apache-2.0`.

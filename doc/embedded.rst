@@ -33,8 +33,12 @@ exception and allocation support. This first embedded path uses a reviewed
 Ada2Proxy scanner/runtime or general embedded support for rich Ada APIs.
 
 Validation passed host execution of the generated wrappers on Apple Silicon
-and cross-linked complete ESP32/WROOM and ESP32-C3 firmware. Physical board
-execution has not yet been performed. ESP32-S2, ESP32-S3, other RISC-V ESP32
+and cross-linked complete ESP32/WROOM and ESP32-C3 firmware. The original
+ESP32-D0WD-V3 revision 3.1 with 4 MB flash passed three clean startups and
+300 repeated serial self-tests for this branch. The hardware record at
+``examples/esp32/validation/esp32-d0wd-v3.json`` identifies the tested source
+and image hashes and records observed upload/serial limitations. ESP32-C3
+physical execution remains pending. ESP32-S2, ESP32-S3, other RISC-V ESP32
 variants, and Intel macOS hosts require separate work or validation.
 
 Tools
