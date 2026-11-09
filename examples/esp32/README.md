@@ -13,7 +13,11 @@ Current validation:
 - Ada and Rust cross-compile for 32-bit, little-endian Xtensa with the windowed ABI.
 - The complete ESP32 firmware links. Its binding symbols resolve, with no
   desktop proxy runtime or Rust allocation entry points in the image.
-- **Hardware execution is pending.** Build reports retain `hardware_tested: false`.
+- **Hardware execution passed** on ESP32-D0WD-V3 revision 3.1 with 4 MB flash:
+  three clean startups and 300 repeated self-tests for this branch. See the
+  [hardware validation record](validation/esp32-d0wd-v3.json) for source/image
+  hashes and observed upload/serial limitations. Build-only reports retain
+  `hardware_tested: false`; physical evidence is recorded separately.
 
 The test covers a mutable `i32` parameter, accepted addition and rejected
 overflow in both directions, a `u64` round trip, `f32`/`f64` arguments and

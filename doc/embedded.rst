@@ -30,10 +30,15 @@ exception and allocation support. This first embedded path uses a reviewed
 ``proxy.json`` for explicit C exports instead. It does **not** add an embedded
 Ada2Proxy scanner/runtime or general embedded support for rich Ada APIs.
 
-The initial validation passed host execution of the generated wrappers on
-Apple Silicon and cross-linked the complete ESP32 firmware. Physical board
-execution has not yet been performed. ESP32-S2, ESP32-S3, RISC-V ESP32 variants,
-and Intel macOS hosts require separate work or validation.
+Validation passed host execution of the generated wrappers on Apple Silicon,
+cross-linked the complete ESP32 firmware, and executed the scalar probe on
+ESP32-D0WD-V3 revision 3.1 with 4 MB flash. This branch passed three clean
+startups and 300 repeated serial self-tests. The hardware record at
+``examples/esp32/validation/esp32-d0wd-v3.json`` identifies the tested source
+and image hashes and records observed upload/serial limitations. It does not
+establish timing, stack bounds, or general embedded API support. ESP32-S2,
+ESP32-S3, RISC-V ESP32 variants, and Intel macOS hosts require separate work
+or validation.
 
 Tools
 -----

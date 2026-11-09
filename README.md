@@ -38,6 +38,9 @@ The Rust backend also provides an experimental `--embedded` profile for
 runtime-free `no_std` scalar bindings. The original ESP32/WROOM example builds
 and links Ada and generated Rust code into firmware. See the
 [embedded guide](doc/embedded.rst) and [ESP32 example](examples/esp32/README.md).
+The scalar probe passed physical execution on an ESP32-D0WD-V3 revision 3.1:
+three clean startups and 300 repeated self-tests for this branch. See the
+[hardware validation record](examples/esp32/validation/esp32-d0wd-v3.json).
 
 ## License
 This work is licensed under `GPL-3.0-or-later AND Apache-2.0`.
