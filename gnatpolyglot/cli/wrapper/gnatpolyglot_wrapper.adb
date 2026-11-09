@@ -30,7 +30,8 @@ procedure GNATpolyglot_Wrapper is
    procedure Setup_Search_Paths;
    --  Set the GNATPOLYGLOT_RUNTIME environment variable to the installation's
    --  runtime unless it was already set. Additionally, extends dynamic library
-   --  search paths (PATH for Windows and LD_LIBRARY_PATH on Linux) to point on
+   --  search paths (PATH for Windows, LD_LIBRARY_PATH on Linux, and
+   --  DYLD_LIBRARY_PATH on macOS) to point on
    --  $PREFIX/lib/gnatpolyglot, to allow the worker processe that relies on
    --  dynamic libraries to find its dependencies without requiring users to
    --  explicitly set these paths.
@@ -175,6 +176,7 @@ procedure GNATpolyglot_Wrapper is
         Compose (Share_Polyglot, "runtimes");
    begin
       Add_Path ("LD_LIBRARY_PATH", Lib_Polyglot);
+      Add_Path ("DYLD_LIBRARY_PATH", Lib_Polyglot);
       Add_Path ("PATH", Lib_Polyglot);
       if not Environment_Variables.Exists ("GNATPOLYGLOT_RUNTIME") then
          Environment_Variables.Set ("GNATPOLYGLOT_RUNTIME", Runtime_Location);

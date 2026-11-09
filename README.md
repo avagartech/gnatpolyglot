@@ -32,6 +32,14 @@ You can then run the native application using:
 $[gnatpolyglot]> ./gnatpolyglot/bin/gnatpolyglot
 ```
 
+### macOS
+
+The experimental Rust backend initially targets Apple Silicon Macs (arm64).
+Intel macOS support is deferred. See [the macOS instructions](doc/macos.rst)
+for the required toolchain, standard standalone Ada libraries, runtime linking,
+and validation commands.
+The Java output backend remains limited to its existing supported platforms.
+
 ## License
 This work is licensed under `GPL-3.0-or-later AND Apache-2.0`.
 

@@ -16,4 +16,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-gnatpolyglot_runtime = { path = "${runtimeLocation}/ada/src2rust" }
+gnatpolyglot_runtime = { path = ${runtimeLocation} }

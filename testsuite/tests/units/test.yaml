@@ -1,4 +1,4 @@
 driver: junit
 
 control:
-  - [SKIP, "not env.build.platform.startswith('x86_64')", "JDK 24 is not available on 32 bits platforms"]
+  - [SKIP, "env.build.cpu.bits != 64", "JDK 24 is not available on 32 bits platforms"]

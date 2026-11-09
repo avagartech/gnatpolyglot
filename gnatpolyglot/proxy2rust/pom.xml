@@ -14,6 +14,13 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.11.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>com.adacore.gnatpolyglot</groupId>
       <artifactId>proxy</artifactId>
       <version>${project.parent.version}</version>

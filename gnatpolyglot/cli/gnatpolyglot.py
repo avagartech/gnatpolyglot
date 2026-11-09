@@ -21,9 +21,18 @@ if __name__ == '__main__':
     )
     class_path = os.path.join(target_dir, f'cli.jar')
 
-    java_library_path = os.environ.get(
-        "PATH" if os.name == 'nt' else 'LD_LIBRARY_PATH', ''
+    library_path_var = (
+        'PATH' if os.name == 'nt' else
+        'DYLD_LIBRARY_PATH' if sys.platform == 'darwin' else
+        'LD_LIBRARY_PATH'
     )
+    java_library_path = os.environ.get(library_path_var, '')
+    if sys.platform == 'darwin':
+        # System-protected launchers can strip DYLD_* from the environment.
+        # LIBRARY_PATH also identifies the native libraries at build time.
+        java_library_path = os.pathsep.join(
+            p for p in (java_library_path, os.environ.get('LIBRARY_PATH', '')) if p
+        )
 
     res = subprocess.run([
         java,
