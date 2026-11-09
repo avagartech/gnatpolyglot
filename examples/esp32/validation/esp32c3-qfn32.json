@@ -1,0 +1,77 @@
+{
+  "timestamp_utc": "2026-11-09T13:23:39.667738+00:00",
+  "hardware_tested": true,
+  "passed": true,
+  "device": {
+    "chip": "esp32c3",
+    "silicon": "ESP32-C3 (QFN32)",
+    "revision": "0.4",
+    "flash_bytes": 4194304,
+    "flash_manufacturer": "XMC",
+    "crystal_mhz": 40,
+    "connection": "native USB Serial/JTAG"
+  },
+  "firmware_source_commit": "2d940388a3c67d4d08f26763d8de3e57a1233060",
+  "platformio_environment": "esp32c3-usb",
+  "firmware_elf_sha256": "af5693ed05427960d55eea74d627c28a20c299577f0dbffa2893a5ad611da6fd",
+  "firmware_bin_sha256": "8fe1f068ae7249f6348a40351f193f309b68dd8b690c72a5d79f9a8878292168",
+  "compiler_abi": {
+    "pointer_bits": 32,
+    "byte_order": "little",
+    "abi": "ilp32",
+    "isa": "rv32imc"
+  },
+  "ada_elf": {
+    "machine": "RISC-V",
+    "bits": 32,
+    "byte_order": "little",
+    "flags": "0x1"
+  },
+  "firmware_elf": {
+    "machine": "RISC-V",
+    "bits": 32,
+    "byte_order": "little",
+    "flags": "0x1"
+  },
+  "flash_write_verified": true,
+  "test": {
+    "startup_passes": 3,
+    "commands_per_cycle": 100,
+    "command_passes": 300,
+    "unexpected_response_lines": 0,
+    "reset_method": "esptool HardReset with uses_usb=True, DTR deasserted",
+    "pass_line": "GNATPOLYGLOT PASS chip=esp32c3 mask=0x00000000",
+    "standard_collector_passed": true,
+    "checks": [
+      "mutable i32 and checked addition",
+      "positive and negative overflow status with output preservation",
+      "u64 round trip",
+      "f32 arguments and return",
+      "f64 arguments and return",
+      "signed i16 including minimum-value handling"
+    ]
+  },
+  "regression": {
+    "architecture_unit_tests_passed": 17,
+    "incompatible_usb_console_options_rejected": true,
+    "c3_uart_firmware_linked": true
+  },
+  "application_reported_bytes": {
+    "ram": 13916,
+    "flash": 244812,
+    "scope": "Complete Arduino/ESP-IDF native USB probe, not binding-only overhead"
+  },
+  "tools": {
+    "gnat": "16.1.0",
+    "rust": "1.99.1",
+    "platformio_platform": "espressif32@6.13.0",
+    "arduino": "2.0.17",
+    "upload_esptool": "4.11.0",
+    "backup_and_reset_esptool": "4.9.0"
+  },
+  "limits": [
+    "This physical test used the native USB console; the UART console variant was cross-linked only.",
+    "The reviewed scalar probe does not establish peripheral integration, real-time timing, stack bounds, power-cycle reliability, or general Ada API support.",
+    "Other RISC-V ESP32 chips and STM32 physical execution are not established by this result."
+  ]
+}

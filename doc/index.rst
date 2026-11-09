@@ -17,6 +17,7 @@ Welcome to GNATpolyglot's documentation!
    proxy2rust
    macos
    embedded
+   esp32c3
    call_convention
    limitations
 

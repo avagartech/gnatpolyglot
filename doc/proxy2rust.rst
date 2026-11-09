@@ -50,7 +50,8 @@ It must be provided with at least a proxy file and an output path:
    Generate a runtime-free ``no_std`` crate for free C-ABI functions using
    fixed-width scalars and scalar reference parameters. Unsupported interface
    types are rejected before generation. This option cannot be combined with
-   ``--with-runtime``. See :ref:`embedded` for the ESP32/WROOM build path.
+   ``--with-runtime``. See :ref:`embedded` for the ESP32/WROOM and ESP32-C3
+   build paths.
 
 Modules
 -------
@@ -362,7 +363,8 @@ support is deferred to a later phase. See
 :ref:`macos` and :ref:`Limitations <limitations>`.
 
 An experimental scalar-only ``no_std`` path also targets the original
-ESP32/WROOM's ``xtensa-esp32-none-elf`` target. Its firmware has been
-cross-linked and the scalar probe passed physical execution on
-ESP32-D0WD-V3 revision 3.1. See
-:ref:`embedded`.
+ESP32/WROOM's ``xtensa-esp32-none-elf`` target and ESP32-C3's
+``riscv32imc-unknown-none-elf`` target. Both scalar probes have passed physical
+execution on the original ESP32 and on ESP32-C3 revision 0.4 with a native
+USB console. See
+:ref:`embedded` and :ref:`esp32c3`.

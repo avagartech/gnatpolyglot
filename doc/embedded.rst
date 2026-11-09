@@ -7,9 +7,11 @@ Scope and current status
 ------------------------
 
 ``gnatpolyglot proxy2rust --embedded`` emits a ``#![no_std]`` Cargo library
-without the desktop GNATpolyglot runtime dependency. The initial board target
-is the **original ESP32/WROOM**, using ``xtensa-esp32-none-elf`` on the Rust
-side and an ESP32-configured Xtensa GNAT compiler on the Ada side.
+without the desktop GNATpolyglot runtime dependency. The shared example targets
+the **original ESP32/WROOM** (``xtensa-esp32-none-elf``) and **ESP32-C3**
+(``riscv32imc-unknown-none-elf``). Select a chip with ``--chip esp32`` (the
+default) or ``--chip esp32c3``. See :ref:`esp32c3` for the RISC-V toolchain and
+build commands; the Xtensa setup is described below.
 
 The generator accepts free functions using fixed-width integers through 64
 bits, 32/64-bit floating-point values, booleans, characters, void returns, and
@@ -30,15 +32,19 @@ exception and allocation support. This first embedded path uses a reviewed
 ``proxy.json`` for explicit C exports instead. It does **not** add an embedded
 Ada2Proxy scanner/runtime or general embedded support for rich Ada APIs.
 
-Validation passed host execution of the generated wrappers on Apple Silicon,
-cross-linked the complete ESP32 firmware, and executed the scalar probe on
-ESP32-D0WD-V3 revision 3.1 with 4 MB flash. The Xtensa feature branch passed
-three clean startups and 300 repeated serial self-tests. The hardware record at
+Validation passed host execution of the generated wrappers on Apple Silicon
+and cross-linked complete ESP32/WROOM and ESP32-C3 firmware. The original
+ESP32-D0WD-V3 revision 3.1 with 4 MB flash passed three clean startups and
+300 repeated serial self-tests per tested feature-branch revision. The record at
 ``examples/esp32/validation/esp32-d0wd-v3.json`` identifies the tested source
-and image hashes and records observed upload/serial limitations. It does not
-establish timing, stack bounds, or general embedded API support. ESP32-S2,
-ESP32-S3, RISC-V ESP32 variants, and Intel macOS hosts require separate work
-or validation.
+and image hashes and records observed upload/serial limitations. ESP32-C3
+QFN32 revision 0.4 with 4 MB embedded flash also passed three clean startups
+and 300 repeated tests using its native USB console; see
+``examples/esp32/validation/esp32c3-qfn32.json`` and :ref:`esp32c3`.
+These records identify the exact source/image hashes before integration into
+``main``. They do not establish timing, stack bounds, or general embedded API
+support. ESP32-S2, ESP32-S3, other RISC-V ESP32 variants, and Intel macOS hosts
+require separate work or validation.
 
 Tools
 -----
@@ -101,6 +107,8 @@ The example compiles the Ada package with range/overflow checks retained,
 creates a static archive, and runs the actual Rust generator with
 ``--embedded``. Cargo then builds a ``no_std`` test library against the
 generated crate, using ``-Zbuild-std=core`` and panic-abort behavior.
+The ESP32-C3 build instead uses stable Rust's precompiled ``core`` for
+``riscv32imc-unknown-none-elf``, without ``-Zbuild-std``.
 
 For the final Arduino/ESP-IDF link, the build makes a separate copy of the
 Rust static archive and removes its compiler-builtins objects. This preserves
@@ -108,11 +116,12 @@ the SDK's common ROM/IRAM memory helpers and libgcc rather than overriding
 them with Rust's generic implementations while flash caches may be disabled.
 The Cargo-produced archive is retained unchanged.
 
-The build verifies the ELF architecture and exported Ada/Rust test symbols.
-``build/esp32/validation.json`` records the checks, entry-point code sizes and
-firmware hash. It records ``hardware_tested: false`` regardless of build
-success. The existing SDK startup references ``start_app`` and
-``start_app_other_cores`` are recorded separately from binding symbols.
+The build verifies the compiler ABI, a 32-bit Ada runtime, the ELF architecture,
+and exported Ada/Rust test symbols. ``build/<chip>/validation.json`` records the
+checks, entry-point code sizes and firmware hash. It records
+``hardware_tested: false`` regardless of build success. Existing SDK startup
+references such as ``start_app`` and ``start_app_other_cores`` are recorded
+separately from binding symbols.
 
 The initial firmware used 21,480 bytes of reported RAM and 268,321 bytes of
 reported flash with the tested SDK configuration. These figures include the
@@ -135,8 +144,9 @@ Apple Silicon with the native GNAT compiler:
 The host runner explicitly links its host Ada runtime. This does not add a
 runtime dependency to the generated embedded crate. A successful run prints
 ``Embedded Ada/Rust host checks passed`` and records its result under
-``build/host/validation.json``. These host checks do not establish Xtensa
-runtime behavior; that still requires the board test.
+``build/host/validation.json``. Add ``--chip esp32c3`` to record a C3 host check
+under ``build/host-esp32c3/``. Host checks do not establish target runtime
+behavior; that still requires the board test.
 
 Board test after connection
 ---------------------------
@@ -146,14 +156,16 @@ using PlatformIO's normal upload target, substituting its serial port:
 
 .. code:: sh
 
-   pio run -d examples/esp32/firmware -t upload --upload-port <PORT>
-   python3 examples/esp32/test_board.py --port <PORT>
+   pio run -d examples/esp32/firmware -e esp32wroom -t upload --upload-port <PORT>
+   python3 examples/esp32/test_board.py --chip esp32 --port <PORT>
 
 The firmware runs its checks on startup and accepts ``TEST`` over serial at
-115200 baud. Success is ``GNATPOLYGLOT PASS mask=0x00000000``. Failures report
-a nonzero mask, an Ada runtime-check failure, or a Rust panic. The serial
-collector saves its observed lines and pass/fail result in
+115200 baud. Success is ``GNATPOLYGLOT PASS chip=esp32 mask=0x00000000``.
+Failures report a nonzero mask, an Ada runtime-check failure, or a Rust panic.
+The serial collector requires a pass line for the selected chip and saves
+its observed lines and pass/fail result in
 ``build/esp32/hardware-validation.json``. It does not flash the board.
+For ESP32-C3, use the environment and chip arguments in :ref:`esp32c3`.
 
 The probe tests mutable scalar parameters, accepted arithmetic, overflow
 status preservation, a 64-bit integer round trip, 32/64-bit floating-point

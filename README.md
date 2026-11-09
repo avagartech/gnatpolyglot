@@ -40,16 +40,18 @@ for the required toolchain, standard standalone Ada libraries, runtime linking,
 and validation commands.
 The Java output backend remains limited to its existing supported platforms.
 
-### ESP32 / Xtensa
+### ESP32 / Xtensa and RISC-V
 
 The Rust backend also provides an experimental `--embedded` profile for
-runtime-free `no_std` scalar bindings. The original ESP32/WROOM example builds
-and links Ada and generated Rust code into firmware. See the
-[embedded guide](doc/embedded.rst) and [ESP32 example](examples/esp32/README.md).
-The scalar probe passed physical execution on an ESP32-D0WD-V3 revision 3.1:
-three clean startups and 300 repeated self-tests for the Xtensa feature branch.
-See the
-[hardware validation record](examples/esp32/validation/esp32-d0wd-v3.json).
+runtime-free `no_std` scalar bindings. The shared example builds and links Ada
+and generated Rust code for the original ESP32/WROOM (Xtensa) and ESP32-C3
+(RISC-V). See the [embedded guide](doc/embedded.rst),
+[ESP32-C3 setup](doc/esp32c3.rst), and [ESP32 example](examples/esp32/README.md).
+Both targets have passed physical scalar-probe execution: three clean startups
+and 300 repeated self-tests each for the original ESP32 and ESP32-C3 with
+native USB. See the [ESP32 hardware record](examples/esp32/validation/esp32-d0wd-v3.json)
+and [ESP32-C3 hardware record](examples/esp32/validation/esp32c3-qfn32.json)
+for the exact feature-branch revisions tested before integration into `main`.
 
 ## License
 This work is licensed under `GPL-3.0-or-later AND Apache-2.0`.

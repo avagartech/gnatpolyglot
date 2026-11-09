@@ -1,4 +1,4 @@
-"""Build the ESP32/WROOM binding probe, or run the same checks on the host."""
+"""Build an ESP32/WROOM or ESP32-C3 binding probe, or run its checks on the host."""
 
 import argparse
 import hashlib
@@ -6,8 +6,9 @@ import json
 import os
 from pathlib import Path
 import shutil
-import struct
 import subprocess
+
+from targets import TARGETS, check_compiler_macros, check_elf
 
 ROOT = Path(__file__).resolve().parent
 REPO = ROOT.parents[1]
@@ -26,17 +27,10 @@ def compiler_file(compiler, name, env):
     return Path(output).resolve()
 
 
-def check_xtensa(path):
-    header = path.read_bytes()[:52]
-    if header[:6] != b"\x7fELF\x01\x01" or struct.unpack_from("<H", header, 18)[0] != 94:
-        raise RuntimeError(f"Expected a 32-bit little-endian Xtensa ELF: {path}")
-    return {"machine": "Xtensa", "bits": 32, "byte_order": "little",
-            "flags": hex(struct.unpack_from("<I", header, 36)[0])}
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--ada-compiler", default=os.environ.get("XTENSA_ADA_COMPILER"))
+    parser.add_argument("--chip", choices=TARGETS, default="esp32")
+    parser.add_argument("--ada-compiler")
     parser.add_argument("--ada-runtime", default=os.environ.get("ESP32_ADA_RUNTIME"))
     parser.add_argument("--xtensa-config", default=os.environ.get("XTENSA_GNU_CONFIG"))
     parser.add_argument("--cargo", default="cargo")
@@ -45,11 +39,19 @@ def main():
     parser.add_argument("--platformio", default="pio")
     parser.add_argument("--build-dir", type=Path)
     parser.add_argument("--host-test", action="store_true")
-    parser.add_argument("--firmware", action="store_true", help="also link the ESP32 firmware; never flashes")
+    parser.add_argument("--firmware", action="store_true", help="also link the selected firmware; never flashes")
+    parser.add_argument("--usb-console", action="store_true",
+                        help="use the ESP32-C3 native USB Serial/JTAG console (requires --firmware)")
     parser.add_argument("--offline", action="store_true")
     args = parser.parse_args()
+    target = TARGETS[args.chip]
+    if args.usb_console and (target.chip != "esp32c3" or args.host_test or not args.firmware):
+        parser.error("--usb-console requires --chip esp32c3 --firmware")
+    pio_environment = target.pio_environment + ("-usb" if args.usb_console else "")
+    args.ada_compiler = (args.ada_compiler or os.environ.get("ESP32_ADA_COMPILER")
+                         or os.environ.get(target.compiler_environment))
     if not args.ada_compiler:
-        parser.error("set --ada-compiler or XTENSA_ADA_COMPILER to the GNAT gcc executable")
+        parser.error(f"set --ada-compiler or {target.compiler_environment} to the GNAT gcc executable")
     if args.host_test and args.firmware:
         parser.error("--host-test and --firmware are separate builds")
     compiler = Path(shutil.which(args.ada_compiler) or args.ada_compiler).resolve()
@@ -63,10 +65,13 @@ def main():
         ar = Path(shutil.which(name) or name).resolve()
         if not ar.is_file():
             parser.error(f"Matching archiver not found: {ar}")
-    build = (args.build_dir or ROOT / "build" / ("host" if args.host_test else "esp32")).resolve()
+    output_name = ("host" if target.chip == "esp32" else "host-" + target.chip) if args.host_test else target.chip
+    if args.usb_console:
+        output_name += "-usb"
+    build = (args.build_dir or ROOT / "build" / output_name).resolve()
     build.mkdir(parents=True, exist_ok=True)
     (build / "validation.json").write_text(json.dumps({
-        "target": "host" if args.host_test else "xtensa-esp32-none-elf",
+        "chip": target.chip, "target": "host" if args.host_test else target.rust_target,
         "build_completed": False, "hardware_tested": False,
     }, indent=2) + "\n")
     env = dict(os.environ)
@@ -74,21 +79,29 @@ def main():
     flags = ["-c", "-O2", "-gnat2022", "-gnato", "-gnatn",
              "-ffunction-sections", "-fdata-sections", "-fstack-usage", "-I" + str(ROOT / "ada")]
     if not args.host_test:
-        if not args.ada_runtime or not args.xtensa_config:
-            parser.error("Xtensa builds require --ada-runtime and --xtensa-config")
+        if not args.ada_runtime and target.chip == "esp32c3":
+            args.ada_runtime = str(compiler.parent.parent / prefix.rstrip("-") / "lib/gnat/light-rv32im")
+        if not args.ada_runtime or not Path(args.ada_runtime).is_dir():
+            parser.error("select the compatible Ada runtime directory with --ada-runtime")
         runtime = Path(args.ada_runtime).resolve()
-        config = Path(args.xtensa_config).resolve()
-        if not runtime.is_dir() or not config.is_file():
-            parser.error("Ada runtime directory or Xtensa CPU configuration file is missing")
-        env["XTENSA_GNU_CONFIG"] = str(config)
-        macros = subprocess.check_output([str(compiler), "-dM", "-E", "-x", "c", "-"],
+        if target.chip == "esp32":
+            if not args.xtensa_config or not Path(args.xtensa_config).is_file():
+                parser.error("Xtensa builds require the ESP32 CPU configuration file via --xtensa-config")
+            env["XTENSA_GNU_CONFIG"] = str(Path(args.xtensa_config).resolve())
+        else:
+            env.pop("XTENSA_GNU_CONFIG", None)
+        macros = subprocess.check_output([str(compiler), *target.compiler_flags, "-dM", "-E", "-x", "c", "-"],
                                          input="", text=True, env=env)
-        required = ["#define __XTENSA_WINDOWED_ABI__ 1",
-                    "#define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__",
-                    "#define __SIZEOF_POINTER__ 4"]
-        if not all(macro in macros for macro in required):
-            raise RuntimeError("The compiler must use the ESP32 LX6 little-endian windowed ABI")
-        flags += ["-mlongcalls", "--RTS=" + str(runtime)]
+        compiler_abi = check_compiler_macros(macros, target)
+        flags += [*target.compiler_flags, "--RTS=" + str(runtime)]
+        guard = build / "target_abi.ads"
+        guard.write_text('''with System;
+package Target_ABI with Pure is
+   pragma Compile_Time_Error (System.Word_Size /= 32, "a 32-bit Ada runtime is required");
+   pragma Compile_Time_Error (Standard'Address_Size /= 32, "32-bit Ada addresses are required");
+end Target_ABI;
+''')
+        run([compiler, *flags, "-gnatc", guard], cwd=build, env=env)
     else:
         env.pop("XTENSA_GNU_CONFIG", None)
     ada_object = build / "abi_probe.o"
@@ -110,9 +123,11 @@ def main():
     env["CARGO_TARGET_DIR"] = str(build / "target")
     cargo = [args.cargo]
     offline = ["--offline"] if args.offline else []
-    report = {"target": "host" if args.host_test else "xtensa-esp32-none-elf",
+    report = {"chip": target.chip, "target": "host" if args.host_test else target.rust_target,
               "hardware_tested": False, "host_test_passed": None, "firmware_linked": False,
               "ada_object_sha256": hashlib.sha256(ada_object.read_bytes()).hexdigest()}
+    if args.firmware:
+        report.update(console="usb" if args.usb_console else "uart", platformio_environment=pio_environment)
     if args.host_test:
         runner = build / "runner"
         (runner / "src").mkdir(parents=True, exist_ok=True)
@@ -143,13 +158,14 @@ polyglot-esp32-probe = { path = "../rust" }
         run([*cargo, "run", *offline, "--manifest-path", runner / "Cargo.toml"], env=env)
         report["host_test_passed"] = True
     else:
-        report["ada_elf"] = check_xtensa(ada_object)
+        report["compiler_abi"] = compiler_abi
+        report["ada_elf"] = check_elf(ada_object, target)
         manifest = build / "rust/Cargo.toml"
         manifest.write_text(manifest.read_text().replace('crate-type = ["rlib"]', 'crate-type = ["staticlib"]'))
         run([*cargo, "build", *offline, "--manifest-path", manifest,
-             "--release", "--features", "firmware", "--target", "xtensa-esp32-none-elf",
-             "-Zbuild-std=core"], env=env)
-        rust_archive = build / "target/xtensa-esp32-none-elf/release/libpolyglot_esp32_probe.a"
+             "--release", "--features", "firmware", "--target", target.rust_target,
+             *(["-Zbuild-std=core"] if target.build_std else [])], env=env)
+        rust_archive = build / "target" / target.rust_target / "release/libpolyglot_esp32_probe.a"
         linked_archive = build / "libpolyglot_esp32_probe.a"
         shutil.copy2(rust_archive, linked_archive)
         members = subprocess.check_output([str(ar), "t", str(linked_archive)], text=True).splitlines()
@@ -163,9 +179,24 @@ polyglot-esp32-probe = { path = "../rust" }
         if args.firmware:
             pio_env = {**env, "PLATFORMIO_SETTING_ENABLE_TELEMETRY": "no"}
             pio_env["POLYGLOT_PROBE_BUILD_DIR"] = str(build)
-            run([args.platformio, "run", "-d", ROOT / "firmware"], env=pio_env)
-            elf = ROOT / "firmware/.pio/build/esp32wroom/firmware.elf"
-            report["firmware_elf"] = check_xtensa(elf)
+            if target.chip == "esp32c3":
+                # Keep the SDK compiler/libraries, but use GNAT's newer linker:
+                # the pinned SDK linker cannot merge modern RISC-V attributes.
+                linker = compiler.with_name(prefix + "ld" + suffix)
+                if not linker.is_file():
+                    raise RuntimeError(f"Matching RISC-V linker not found: {linker}")
+                adapter = build / "sdk-linker"
+                adapter.mkdir(exist_ok=True)
+                for name in ("ld" + suffix, "riscv32-esp-elf-ld" + suffix):
+                    alias = adapter / name
+                    if alias.is_symlink() or alias.exists():
+                        alias.unlink()
+                    alias.symlink_to(linker)
+                pio_env["POLYGLOT_PROBE_LINKER_DIR"] = str(adapter)
+                report["firmware_linker"] = str(linker)
+            run([args.platformio, "run", "-d", ROOT / "firmware", "-e", pio_environment], env=pio_env)
+            elf = ROOT / "firmware/.pio/build" / pio_environment / "firmware.elf"
+            report["firmware_elf"] = check_elf(elf, target)
             nm = compiler.with_name(prefix + "nm" + suffix)
             symbols = subprocess.check_output([str(nm), "-S", str(elf)], text=True)
             names = {line.split()[-1] for line in symbols.splitlines() if line.split()}
