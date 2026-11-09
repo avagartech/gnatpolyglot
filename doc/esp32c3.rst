@@ -72,6 +72,21 @@ From the repository root, adapting the compiler path:
    export RISCV_ADA_COMPILER="/path/to/gnat/bin/riscv64-elf-gcc"
    python3 examples/esp32/build.py --chip esp32c3 --firmware
 
+This selects the UART console for boards with an external USB-to-UART bridge.
+For a board connected through the C3's built-in USB Serial/JTAG peripheral,
+select the native USB console instead:
+
+.. code:: sh
+
+   python3 examples/esp32/build.py --chip esp32c3 --usb-console --firmware
+
+The ``esp32c3-usb`` PlatformIO environment enables hardware CDC/JTAG and
+``ARDUINO_USB_CDC_ON_BOOT`` in the pinned Arduino 2.0.17 SDK. It keeps the same
+RV32IMC/ILP32 bindings, flash layout, and linker adapter. Its separate outputs
+are in ``build/esp32c3-usb/`` and ``firmware/.pio/build/esp32c3-usb/``. Upload
+that variant with ``-e esp32c3-usb``. ``--usb-console`` requires a C3 firmware
+build and does not apply to host checks or the original ESP32/WROOM.
+
 ``--ada-compiler`` can override the compiler environment variable. Unset an
 Xtensa-specific ``ESP32_ADA_RUNTIME`` before this build, or explicitly select
 the C3 runtime with ``--ada-runtime``. Use ``--offline`` when Cargo's required
@@ -131,6 +146,11 @@ and its serial port, upload and collect its self-test:
 
    pio run -d examples/esp32/firmware -e esp32c3 -t upload --upload-port <PORT>
    python3 examples/esp32/test_board.py --chip esp32c3 --port <PORT>
+
+Use ``-e esp32c3-usb`` for the native USB build. Its serial port is the
+Espressif USB Serial/JTAG device (typically ``/dev/cu.usbmodem...`` on macOS).
+When using PlatformIO's monitor, the USB environment leaves DTR and RTS
+deasserted; the bootloader and application console share that USB connection.
 
 For a custom ``--build-dir``, set ``POLYGLOT_PROBE_BUILD_DIR`` to that full
 directory when invoking PlatformIO directly so it finds the matching

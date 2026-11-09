@@ -3,8 +3,9 @@ import os
 
 Import("env")
 root = Path(env["PROJECT_DIR"]).parent
-chip = "esp32c3" if env["PIOENV"] == "esp32c3" else "esp32"
-build = Path(os.environ.get("POLYGLOT_PROBE_BUILD_DIR", str(root / "build" / chip)))
+chip = "esp32c3" if env["PIOENV"].startswith("esp32c3") else "esp32"
+output_name = env["PIOENV"] if chip == "esp32c3" else chip
+build = Path(os.environ.get("POLYGLOT_PROBE_BUILD_DIR", str(root / "build" / output_name)))
 env.Append(LIBPATH=[str(build)])
 env.Append(LIBS=["polyglot_esp32_probe"])
 if chip == "esp32c3":

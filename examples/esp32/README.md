@@ -41,6 +41,7 @@ Select the chip in both build and serial-test commands:
 | --- | --- | --- | --- | --- |
 | ESP32/WROOM | `--chip esp32` (default) | `esp32wroom` | `build/esp32/` | `build/host/` |
 | ESP32-C3 | `--chip esp32c3` | `esp32c3` | `build/esp32c3/` | `build/host-esp32c3/` |
+| ESP32-C3 native USB | `--chip esp32c3 --usb-console --firmware` | `esp32c3-usb` | `build/esp32c3-usb/` | Use the C3 host check above |
 
 For example, after installing the C3 tools and building the Rust generator:
 
@@ -53,6 +54,11 @@ Each output directory contains `generated/`, the firmware library, and
 `validation.json`. Application images are in
 `firmware/.pio/build/<environment>/firmware.bin`. The C3 build also creates a
 local linker adapter so that the SDK can link modern RISC-V objects.
+
+For a C3 connected through native USB Serial/JTAG, add ``--usb-console`` to
+the firmware build. This enables the SDK's hardware USB console and selects
+the separate ``esp32c3-usb`` environment. The default C3 environment uses a
+UART console for boards with an external USB-to-UART bridge.
 
 After flashing the matching probe, use
 `python3 examples/esp32/test_board.py --chip esp32c3 --port <PORT>` (or

@@ -40,9 +40,14 @@ def main():
     parser.add_argument("--build-dir", type=Path)
     parser.add_argument("--host-test", action="store_true")
     parser.add_argument("--firmware", action="store_true", help="also link the selected firmware; never flashes")
+    parser.add_argument("--usb-console", action="store_true",
+                        help="use the ESP32-C3 native USB Serial/JTAG console (requires --firmware)")
     parser.add_argument("--offline", action="store_true")
     args = parser.parse_args()
     target = TARGETS[args.chip]
+    if args.usb_console and (target.chip != "esp32c3" or args.host_test or not args.firmware):
+        parser.error("--usb-console requires --chip esp32c3 --firmware")
+    pio_environment = target.pio_environment + ("-usb" if args.usb_console else "")
     args.ada_compiler = (args.ada_compiler or os.environ.get("ESP32_ADA_COMPILER")
                          or os.environ.get(target.compiler_environment))
     if not args.ada_compiler:
@@ -61,6 +66,8 @@ def main():
         if not ar.is_file():
             parser.error(f"Matching archiver not found: {ar}")
     output_name = ("host" if target.chip == "esp32" else "host-" + target.chip) if args.host_test else target.chip
+    if args.usb_console:
+        output_name += "-usb"
     build = (args.build_dir or ROOT / "build" / output_name).resolve()
     build.mkdir(parents=True, exist_ok=True)
     (build / "validation.json").write_text(json.dumps({
@@ -119,6 +126,8 @@ end Target_ABI;
     report = {"chip": target.chip, "target": "host" if args.host_test else target.rust_target,
               "hardware_tested": False, "host_test_passed": None, "firmware_linked": False,
               "ada_object_sha256": hashlib.sha256(ada_object.read_bytes()).hexdigest()}
+    if args.firmware:
+        report.update(console="usb" if args.usb_console else "uart", platformio_environment=pio_environment)
     if args.host_test:
         runner = build / "runner"
         (runner / "src").mkdir(parents=True, exist_ok=True)
@@ -185,8 +194,8 @@ polyglot-esp32-probe = { path = "../rust" }
                     alias.symlink_to(linker)
                 pio_env["POLYGLOT_PROBE_LINKER_DIR"] = str(adapter)
                 report["firmware_linker"] = str(linker)
-            run([args.platformio, "run", "-d", ROOT / "firmware", "-e", target.pio_environment], env=pio_env)
-            elf = ROOT / "firmware/.pio/build" / target.pio_environment / "firmware.elf"
+            run([args.platformio, "run", "-d", ROOT / "firmware", "-e", pio_environment], env=pio_env)
+            elf = ROOT / "firmware/.pio/build" / pio_environment / "firmware.elf"
             report["firmware_elf"] = check_elf(elf, target)
             nm = compiler.with_name(prefix + "nm" + suffix)
             symbols = subprocess.check_output([str(nm), "-S", str(elf)], text=True)
