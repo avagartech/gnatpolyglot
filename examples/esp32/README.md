@@ -21,7 +21,10 @@ Current validation:
   with 4 MB flash: three clean startups and 300 repeated self-tests for this
   branch. See the [hardware record](validation/esp32-d0wd-v3.json) for exact
   source/image hashes and observed upload/serial limitations.
-- **ESP32-C3 hardware execution is pending.** Build-only reports retain
+- **ESP32-C3 hardware execution passed** on QFN32 revision 0.4 with 4 MB
+  embedded flash through native USB: three clean startups and 300 repeated
+  self-tests. See the [C3 hardware record](validation/esp32c3-qfn32.json).
+  The UART console variant was cross-linked only. Build-only reports retain
   `hardware_tested: false`; physical evidence is recorded separately.
 
 The test covers a mutable `i32` parameter, accepted addition and rejected

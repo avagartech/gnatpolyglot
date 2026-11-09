@@ -38,7 +38,10 @@ ESP32-D0WD-V3 revision 3.1 with 4 MB flash passed three clean startups and
 300 repeated serial self-tests for this branch. The hardware record at
 ``examples/esp32/validation/esp32-d0wd-v3.json`` identifies the tested source
 and image hashes and records observed upload/serial limitations. ESP32-C3
-physical execution remains pending. ESP32-S2, ESP32-S3, other RISC-V ESP32
+QFN32 revision 0.4 with 4 MB embedded flash also passed three clean startups
+and 300 repeated tests using its native USB console; see
+``examples/esp32/validation/esp32c3-qfn32.json`` and :ref:`esp32c3`.
+ESP32-S2, ESP32-S3, other RISC-V ESP32
 variants, and Intel macOS hosts require separate work or validation.
 
 Tools

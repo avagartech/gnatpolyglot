@@ -352,6 +352,7 @@ Proxy2Rust's desktop profile currently supports 64-bit Linux and Windows platfor
 
 An experimental scalar-only ``no_std`` path also targets the original
 ESP32/WROOM's ``xtensa-esp32-none-elf`` target and ESP32-C3's
-``riscv32imc-unknown-none-elf`` target. Both firmware images have been
-cross-linked; board execution remains a separate hardware test. See
+``riscv32imc-unknown-none-elf`` target. Both scalar probes have passed physical
+execution on the original ESP32 and on ESP32-C3 revision 0.4 with a native
+USB console. See
 :ref:`embedded` and :ref:`esp32c3`.

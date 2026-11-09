@@ -16,9 +16,13 @@ On an Apple Silicon host, the generated wrappers passed native Ada/Rust
 execution checks and the complete C3 firmware cross-linked successfully.
 The compiler and final image passed ELF32/RISC-V, compressed-instruction,
 and soft-float ABI checks. The original Xtensa firmware also still builds.
-**Hardware execution is pending**; build reports retain
-``hardware_tested: false``. ESP32-C2, C6, H2, and other RISC-V chips are not
-validated by the C3 build.
+**Hardware execution passed** on ESP32-C3 QFN32 revision 0.4 with 4 MB
+embedded flash, using its native USB Serial/JTAG console: three clean
+startups and 300 repeated self-tests. The standard serial collector also
+passed. The exact source/image hashes, tools, and scope are recorded in
+``examples/esp32/validation/esp32c3-qfn32.json``. Build-only reports retain
+``hardware_tested: false``; the UART console variant has been cross-linked
+only. ESP32-C2, C6, H2, and other RISC-V chips are not validated by the C3 build.
 
 Tools
 -----
@@ -111,6 +115,9 @@ crate, static libraries, and ``validation.json``. Firmware images are under
 13,772 bytes of reported RAM and 247,486 bytes of reported flash. These totals
 include Arduino/ESP-IDF and the serial harness; they do not measure binding
 overhead or real-time performance.
+The physically tested native USB application reported 13,916 bytes RAM and
+244,812 bytes flash under the same SDK. This likewise includes the complete
+probe application rather than binding-only memory use.
 
 Host and ABI checks
 -------------------
