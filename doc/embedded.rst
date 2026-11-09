@@ -40,9 +40,14 @@ Ada2Proxy scanner/runtime or general embedded support for rich Ada APIs.
 
 Validation passed host execution of the generated wrappers on Apple Silicon
 and cross-linked complete ESP32/WROOM, ESP32-C3, STM32F405RG, and STM32H743VI
-probe firmware. Physical board execution has not yet been performed. Other
-STM32 parts/cores, ESP32-S2, ESP32-S3, other RISC-V ESP32 variants, and Intel
-macOS hosts require separate work or validation.
+probe firmware. The shared original ESP32 firmware from the RISC-V branch
+passed three clean startups and 300 repeated serial self-tests on
+ESP32-D0WD-V3 revision 3.1 with 4 MB flash. The hardware record at
+``examples/esp32/validation/esp32-d0wd-v3.json`` identifies the tested source
+and image hashes and records observed upload/serial limitations. ESP32-C3 and
+STM32 physical execution remains pending. Other STM32 parts/cores, ESP32-S2,
+ESP32-S3, other RISC-V ESP32 variants, and Intel macOS hosts require separate
+work or validation.
 
 Tools
 -----

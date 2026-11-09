@@ -40,7 +40,9 @@ and generated Rust code for the original ESP32/WROOM (Xtensa), ESP32-C3
 (RISC-V), and STM32F405RG/H743VI (Arm Cortex-M4F/M7). See the
 [embedded guide](doc/embedded.rst), [ESP32-C3 setup](doc/esp32c3.rst),
 [ESP32 example](examples/esp32/README.md), and [STM32 guide](doc/stm32.rst).
-The firmware images have been cross-linked; hardware execution is pending.
+The firmware images have been cross-linked. The shared original ESP32 probe
+passed hardware execution; ESP32-C3 and STM32 hardware execution is pending.
+See the [ESP32 hardware record](examples/esp32/validation/esp32-d0wd-v3.json).
 
 ## License
 This work is licensed under `GPL-3.0-or-later AND Apache-2.0`.

@@ -17,7 +17,13 @@ Current validation:
   ABI and RISC-V RV32IMC with the ILP32 soft-float ABI.
 - The complete firmware links for each chip. Its binding symbols resolve, with no
   desktop proxy runtime or Rust allocation entry points in the image.
-- **Hardware execution is pending.** Build reports retain `hardware_tested: false`.
+- **Original ESP32 hardware execution passed** on ESP32-D0WD-V3 revision 3.1
+  with 4 MB flash: the shared firmware from `feature/esp32-riscv` passed three
+  clean startups and 300 repeated self-tests. See the
+  [hardware record](validation/esp32-d0wd-v3.json) for exact source/image hashes
+  and observed upload/serial limitations.
+- **ESP32-C3 hardware execution is pending.** Build-only reports retain
+  `hardware_tested: false`; physical evidence is recorded separately.
 
 The test covers a mutable `i32` parameter, accepted addition and rejected
 overflow in both directions, a `u64` round trip, `f32`/`f64` arguments and

@@ -1,0 +1,69 @@
+{
+  "hardware_tested": true,
+  "passed": true,
+  "device": {
+    "target": "original ESP32/WROOM",
+    "silicon": "ESP32-D0WD-V3",
+    "revision": "3.1",
+    "flash_bytes": 4194304,
+    "crystal_mhz": 40
+  },
+  "serial_baud": 115200,
+  "reset_method": "EN reset through CP2102 RTS, with DTR deasserted",
+  "test": {
+    "reset_cycles_per_firmware": 3,
+    "commands_per_cycle": 100,
+    "command_passes_total": 600,
+    "startup_passes_total": 6,
+    "checks": [
+      "mutable i32 and checked addition",
+      "positive and negative overflow status with output preservation",
+      "u64 round trip",
+      "f32 arguments and return",
+      "f64 arguments and return",
+      "signed i16 including minimum-value handling"
+    ]
+  },
+  "firmware_runs": [
+    {
+      "timestamp_utc": "2026-11-09T07:13:19.684999+00:00",
+      "source_commit": "c3f8c5fcee9019e4acc63b6185cf514a001828fe",
+      "firmware_elf_sha256": "9311b6a2ce48adddc132d7545734ab7890cc782e7d15c2346bfd8db488eb1bf1",
+      "firmware_bin_sha256": "cadd237f54ad6eaea14408906d157bb2ee02d9190c5470b4419a71fe2073cbf4",
+      "startup_passes": 3,
+      "command_passes": 300,
+      "passed": true,
+      "branch": "feature/esp32-xtensa",
+      "pass_line": "GNATPOLYGLOT PASS mask=0x00000000",
+      "unexpected_response_lines": 0
+    },
+    {
+      "timestamp_utc": "2026-11-09T07:09:37.985439+00:00",
+      "source_commit": "1382db23360c35076472ac99e1ad9807f642f02a",
+      "firmware_elf_sha256": "7b38d47697c673a57f595d7d8e5654c9035cb47c0532e46a7ce7e52c0dc57e7d",
+      "firmware_bin_sha256": "a9245e98a32b9d585511b5fb6cb7f0989bec5a934708024702ae3a3c7d6e7469",
+      "startup_passes": 3,
+      "command_passes": 300,
+      "passed": true,
+      "branch": "feature/esp32-riscv",
+      "pass_line": "GNATPOLYGLOT PASS chip=esp32 mask=0x00000000",
+      "unexpected_response_lines": 0
+    }
+  ],
+  "tools": {
+    "gnat": "16.1.0",
+    "rust": "Espressif 1.97.0.0",
+    "platformio_platform": "espressif32@6.13.0",
+    "arduino": "2.0.17",
+    "upload_esptool": "4.9.0"
+  },
+  "observations": [
+    "An initial PlatformIO esptool 4.11.0 upload failed during connection before flash writes; esptool 4.9.0 uploaded successfully with data hashes verified.",
+    "The first serial capture after upload contained repeated/corrupted fragments before a valid pass. All recorded repetition runs used explicit EN resets and produced exactly the expected responses."
+  ],
+  "limits": [
+    "Only this original ESP32 silicon and the reviewed scalar probe were executed.",
+    "ESP32-C3 and STM32 physical execution remains pending.",
+    "Reset tests do not establish power-cycle reliability, real-time timing, stack bounds, peripheral integration, or general Ada API support."
+  ]
+}
